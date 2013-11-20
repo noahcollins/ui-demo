@@ -1,12 +1,39 @@
 module.exports = function(grunt) {
   "use strict";
 
-  grunt.initConfig({
-    // Clear out previous builds and test reporting.
-    clean: ["dist/", "test/reports"],
+  require("load-grunt-tasks")(grunt, {
+    pattern: [
+      "grunt-*",
+      "karma-*",
+      "bbb",
+      "jshint-stylish"
+      ]
+    });
 
-    // Run your source code through JSHint's defaults.
-    jshint: ["app/**/*.js"],
+  require("time-grunt")(grunt);
+
+  grunt.initConfig({
+    // Clear out previous builds and test reporting
+    clean: [
+      "dist/",
+      "test/reports"
+      ],
+
+    // Run the app and tests through JSHint, using settings from the
+    // .jshintrc file.
+    jshint: {
+      options: {
+        jshintrc: ".jshintrc",
+        reporter: require("jshint-stylish")
+        },
+        all: [
+          "Gruntfile.js",
+          "app/{,*/}*.js",
+          "test/jasmine/specs/{,*/}*.js",
+          "test/mocha/specs/{,*/}*.js",
+          "test/qunit/specs/{,*/}*.js"
+          ]
+    },
 
     // This task uses James Burke's excellent r.js AMD builder to take all
     // modules and concatenate them into a single file.
@@ -40,15 +67,37 @@ module.exports = function(grunt) {
       }
     },
 
+    // less: {
+    //   development: {
+    //     options: {
+    //       paths: ["vendor/bower/bootstrap"],
+    //       relativeUrls: true
+    //     },
+    //     files: {
+    //       "app/styles/index.css": "app/styles/index.less"
+    //     }
+    //   },
+    //   dist: {
+    //     options: {
+    //       paths: ["vendor/bower/bootstrap"],
+    //       relativeUrls: true,
+    //       cleancss: true
+    //     },
+    //     files: {
+    //       "app/styles/index.css": "app/styles/index.less"
+    //     }
+    //   }
+    // },
+
     // This task simplifies working with CSS inside Backbone Boilerplate
     // projects. Instead of manually specifying your stylesheets inside the
     // HTML, you can use `@imports` and this task will concatenate only those
     // paths.
     styles: {
-      // Out the concatenated contents of the following styles into the below
-      // development file path.
+      // Output the concatenated contents of the following styles into the
+      // development file path below.
       "dist/styles.css": {
-        // Point this to where your index.css.
+        // Point this to your index.css.
         src: "app/styles/index.css",
 
         // The relative path to use for the @imports.
@@ -109,6 +158,16 @@ module.exports = function(grunt) {
       }
     },
 
+    concurrent: {
+      target1: ["imagemin","svgmin"],
+      target2: {
+        tasks: ["nodemon", "watch"],
+          options: {
+            logConcurrentOutput: true
+          }
+      }
+    },
+
     compress: {
       release: {
         options: {
@@ -118,6 +177,19 @@ module.exports = function(grunt) {
         files: ["dist/source.min.js"]
       }
     },
+
+    // rev: {
+    //   dist: {
+    //     files: {
+    //       src: [
+    //         'dist/scripts/{,*/}*.js',
+    //         'dist/styles/{,*/}*.css',
+    //         'dist/images/{,*/}*.{png,jpg,jpeg,gif,webp}',
+    //         'dist/styles/fonts/*'
+    //       ]
+    //     }
+    //   }
+    // },
 
     // Unit testing is provided by Karma. Change the two commented locations
     // below to either: mocha, jasmine, or qunit.
@@ -191,22 +263,31 @@ module.exports = function(grunt) {
     }
   });
 
+
+
   // Grunt contribution tasks.
+  /*
   grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-contrib-jshint");
+  grunt.loadNpmTasks("grunt-contrib-less");
   grunt.loadNpmTasks("grunt-contrib-cssmin");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-contrib-compress");
+  grunt.loadNpmTasks("grunt-contrib-watch");
 
   // Third-party tasks.
   grunt.loadNpmTasks("grunt-karma");
   grunt.loadNpmTasks("grunt-karma-coveralls");
+  grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks("grunt-processhtml");
+  grunt.loadNpmTasks("grunt-rev");
+  grunt.loadNpmTasks("grunt-svgmin");
 
   // Grunt BBB tasks.
   grunt.loadNpmTasks("grunt-bbb-server");
   grunt.loadNpmTasks("grunt-bbb-requirejs");
   grunt.loadNpmTasks("grunt-bbb-styles");
+  */
 
   // When running the default Grunt command, just lint the code.
   grunt.registerTask("default", [
@@ -216,6 +297,20 @@ module.exports = function(grunt) {
     "copy",
     "requirejs",
     "styles",
-    "cssmin",
+    "cssmin"
   ]);
+
+  grunt.registerTask("demotask", [
+    "clean",
+    //"less",
+    "concurrent:target1",
+    "jshint",
+    "processhtml",
+    "copy",
+    "requirejs",
+    "styles",
+    "cssmin",
+    //"rev:dist",
+    //"usemin"
+    ]);
 };

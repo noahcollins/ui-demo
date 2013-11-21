@@ -28,10 +28,9 @@ module.exports = function(grunt) {
         },
         all: [
           "Gruntfile.js",
-          "app/{,*/}*.js",
-          "test/jasmine/specs/{,*/}*.js",
-          "test/mocha/specs/{,*/}*.js",
-          "test/qunit/specs/{,*/}*.js"
+          "app/*.js",
+          "app/modules/{,*/}*.js",
+          "test/jasmine/specs/{,*/}*.js"
           ]
     },
 
@@ -103,13 +102,67 @@ module.exports = function(grunt) {
         // The relative path to use for the @imports.
         paths: ["app/styles"],
 
-        // Rewrite image paths during release to be relative to the `img`
-        // directory.
-        forceRelative: "/app/img/"
+        // Rewrite image paths during release to be relative to the
+        // `imgages` directory.
+        forceRelative: "/app/images/"
       }
     },
 
-    // Minfiy the distribution CSS.
+    responsive_images: {
+      dev: {
+        options: {
+          sizes: [
+            {
+              name: "small",
+              width: 320
+            },
+            {
+              name: "medium",
+              width: 640
+            },
+            {
+              name: "large",
+              width: 1024
+            },
+            {
+              name: "large",
+              width: 1024,
+              suffix: "_x2",
+              quality: 0.6
+            }
+          ]
+        },
+        files: [{
+          expand: true,
+            cwd: "app/images",
+            src: "{,*/}*.{png,jpg,jpeg}",
+            dest: "app/images"
+                }]
+            }
+        },
+
+    imagemin: {
+      dist: {
+        files: [{
+          expand: true,
+              cwd: "app/images",
+              src: "{,*/}*.{png,jpg,jpeg}",
+              dest: "app/images"
+                }]
+            }
+    },
+    
+    svgmin: {
+      dist: {
+        files: [{
+          expand: true,
+            cwd: "app/images",
+            src: "{,*/}*.svg",
+            dest: "app/images"
+        }]
+      }
+    },
+    
     cssmin: {
       release: {
         files: {
@@ -120,7 +173,8 @@ module.exports = function(grunt) {
 
     server: {
       options: {
-        host: "0.0.0.0",
+        // use "0.0.0.0" to access the server from outside
+        host: "localhost",
         port: 8000
       },
 
@@ -148,7 +202,7 @@ module.exports = function(grunt) {
       }
     },
 
-    // Move vendor and app logic during build.
+    // Copy vendor packages and app logic during build.
     copy: {
       release: {
         files: [
@@ -182,10 +236,10 @@ module.exports = function(grunt) {
     //   dist: {
     //     files: {
     //       src: [
-    //         'dist/scripts/{,*/}*.js',
-    //         'dist/styles/{,*/}*.css',
-    //         'dist/images/{,*/}*.{png,jpg,jpeg,gif,webp}',
-    //         'dist/styles/fonts/*'
+    //         "dist/scripts/{,*/}*.js",
+    //         "dist/styles/{,*/}*.css",
+    //         "dist/images/{,*/}*.{png,jpg,jpeg,gif,webp}",
+    //         "dist/styles/fonts/*""
     //       ]
     //     }
     //   }
@@ -278,7 +332,7 @@ module.exports = function(grunt) {
   // Third-party tasks.
   grunt.loadNpmTasks("grunt-karma");
   grunt.loadNpmTasks("grunt-karma-coveralls");
-  grunt.loadNpmTasks('grunt-concurrent');
+  grunt.loadNpmTasks("grunt-concurrent");
   grunt.loadNpmTasks("grunt-processhtml");
   grunt.loadNpmTasks("grunt-rev");
   grunt.loadNpmTasks("grunt-svgmin");
@@ -303,7 +357,10 @@ module.exports = function(grunt) {
   grunt.registerTask("demotask", [
     "clean",
     //"less",
-    "concurrent:target1",
+    "responsive_images",
+    "imagemin",
+    "svgmin",
+    //"concurrent:target1",
     "jshint",
     "processhtml",
     "copy",
